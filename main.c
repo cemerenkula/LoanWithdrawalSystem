@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 typedef struct installment{
     char insid[30];
@@ -28,7 +29,118 @@ typedef struct customer{
     loan *loanptr;
 }customer;
 
+void newCustomerFunc(customer* head, customer* currNode, int id){
+    customer* newCustomer;
+    newCustomer = (customer*) malloc(sizeof(customer));
 
+    if (head == NULL) {
+        head = newCustomer;
+        currNode = newCustomer;
+        newCustomer->customerid = id;
+        newCustomer->totaldebt = 0;
+        newCustomer->loanptr = NULL;
+    }
+    else {
+        currNode->nextcust = newCustomer;
+        currNode = newCustomer;
+        newCustomer->customerid = id;
+        newCustomer->totaldebt = 0;
+        newCustomer->loanptr = NULL;
+    }
+}
+
+void readCustomers(){
+
+    int letter;
+    int space = 0;
+    int i = 0;
+    int id = 1;
+
+    //Creating head and currCustomer
+    customer* head = NULL;
+    customer* currCustomer = NULL;
+
+    //Creating First Customer Node
+    customer* newCustomer;
+    newCustomer = (customer*) malloc(sizeof(customer));
+    head = newCustomer;
+    currCustomer = newCustomer;
+    newCustomer->customerid = id;
+    newCustomer->nextcust = NULL;
+    newCustomer->totaldebt = 0;
+    newCustomer->loanptr = NULL;
+
+    //Reading File
+    FILE *customer_txt = fopen("customer.txt", "r");
+    if(customer_txt == NULL){
+        printf("Error opening file\n");
+    }
+
+    //Getting First Letter
+    letter = fgetc(customer_txt);
+
+
+
+    //Reading letter by letter
+    while(letter != EOF){
+
+        if(letter == "\n"){
+            id++;
+            newCustomerFunc(head, currCustomer, id);
+            letter = fgetc(customer_txt);
+            space = 0;
+            i = 0;
+        }
+
+
+
+        switch (space){
+            case 0:
+                if(letter == " ") {
+                    newCustomer->name[i] = '\0';
+                }
+                else {
+                    newCustomer->name[i] = letter;
+                }
+                break;
+            case 1:
+                if(letter == " ") {
+                    newCustomer->surname[i] = '\0';
+                }
+                else {
+                    newCustomer->surname[i] = letter;
+                }
+                break;
+            case 2:
+                newCustomer->customertype[i] = letter;
+                break;
+        }
+
+        if(letter == " "){
+            space++;
+            letter = fgetc(customer_txt);
+            i = 0;
+            continue;
+        }
+
+        letter = fgetc(customer_txt);
+        i++;
+
+    }
+}
+
+void printCustomers(customer *n){
+    printf("--------------------------------------------------");
+    while(n != NULL){
+        for (int i = 0; n->name[i] != '\0'; i++) {
+            printf("%c", n->name[i]);
+        }
+
+        n = n->nextcust;
+        printf("\n");
+    }
+
+}
 
 int main(){
     customer *customers;
@@ -51,9 +163,11 @@ int main(){
         switch (option){
             case 1:
                 //readCustomers function call here
+                readCustomers();
                 break;
             case 2:
                 //printCustomers function call here
+                printCustomers(head);
                 break;
             case 3:
                 //readLoans function call here

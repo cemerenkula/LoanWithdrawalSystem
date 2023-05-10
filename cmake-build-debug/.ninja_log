@@ -1,0 +1,9 @@
+# ninja log v5
+1	340	7054551468804906	CMakeFiles/LoanWithdrawalSystem.dir/main.c.obj	f65be9bdb7a9fd82
+341	464	7054551470031084	LoanWithdrawalSystem.exe	7c2d424195ef9981
+1	55	7054572796530689	CMakeFiles/LoanWithdrawalSystem.dir/main.c.obj	f65be9bdb7a9fd82
+55	129	7054572797250951	LoanWithdrawalSystem.exe	7c2d424195ef9981
+1	47	7054577007122244	CMakeFiles/LoanWithdrawalSystem.dir/main.c.obj	f65be9bdb7a9fd82
+48	107	7054577007702463	LoanWithdrawalSystem.exe	7c2d424195ef9981
+2	53	7054577944331882	CMakeFiles/LoanWithdrawalSystem.dir/main.c.obj	f65be9bdb7a9fd82
+53	112	7054577944902101	LoanWithdrawalSystem.exe	7c2d424195ef9981

@@ -30,154 +30,75 @@ typedef struct customer{
     loan *loanptr;
 }customer;
 
-void readCustomers(struct customer **head) {
-	FILE *fp;
-	char line[100];
+void insertCustomer(customer** customers, char name[], char surname[], char customertype[], int id, double totaldebt) {
+    customer* newCustomer = (customer*)malloc(sizeof(customer));
+    strcpy(newCustomer->name, name);
+    strcpy(newCustomer->surname, surname);
+    strcpy(newCustomer->customertype, customertype);
+    newCustomer->customerid = id;
+    newCustomer->totaldebt = totaldebt;
+    newCustomer->loanptr = NULL;
+    newCustomer->nextcust = NULL;
+
+    if (*customers == NULL) {
+        *customers = newCustomer;
+    } else {
+        customer* temp = *customers;
+        while (temp->nextcust != NULL) {
+            temp = temp->nextcust;
+        }
+        temp->nextcust = newCustomer;
+    }
+}
+
+void printCustomers(customer* customers) {
+    customer* temp = customers;
+    while (temp != NULL) {
+        printf("--------------------------------------------------\n");
+        printf("%d - %s %s type : %s total debt : %.0f\n", temp->customerid, temp->name, temp->surname, temp->customertype, temp->totaldebt);
+        temp = temp->nextcust;
+    }
+}
+
+void readCustomers(customer** customers, const char* filename) {
+    FILE* customers_txt = fopen(filename, "r");
+
+    char line[150];
+    char name[20];
+    char surname[30];
+    char customerType[20];
     int id = 1;
-    struct customer *current = *head;
-    
-    // open customers file
-    fp = fopen("customers.txt", "r");
-    if (fp == NULL) {
-        printf("Error: could not open customers file.\n");
-        exit(1);
+    double totaldebt = 0;
+
+    if (customers_txt == NULL) {
+        perror("Error opening file");
+        exit(EXIT_FAILURE);
     }
-    
-    // read file line by line and create customers
-    while (fgets(line, sizeof(line), fp)) {
-        // parse customer information from line
-        char name[20], surname[30], customertype[20];
-        sscanf(line, "%s %s %s", name, surname, customertype);
-        
-        // create new customer
-        struct customer *newcust = malloc(sizeof(struct customer));
-        strcpy(newcust->name, name);
-        strcpy(newcust->surname, surname);
-        newcust->customerid = id++;
-        strcpy(newcust->customertype, customertype);
-        newcust->totaldebt = 0;
-        newcust->loanptr = NULL;
-        newcust->nextcust = NULL;
-        
-        // add customer to linked list
-        if (*head == NULL) {
-            *head = newcust;
-            current = newcust;
-        } else {
-            current->nextcust = newcust;
-            current = newcust;
-        }
+
+    while (fgets(line, sizeof(line), customers_txt) != NULL) {
+        sscanf(line, "%s %s %s", name, surname, customerType);
+        insertCustomer(customers, name, surname, customerType, id, totaldebt);
+        id++;
     }
-    
-    // close customers file
-    fclose(fp);
+
+    fclose(customers_txt);
 }
 
-void printCustomers(struct customer *head) {
-    struct customer *current = head;
+void freeCustomerList(customer** customers) {
+    customer* temp = *customers;
+    customer* next;
 
-    printf("\n\n#############################################################\n");
-    while (current != NULL) {
-    	printf("---------------------------------------------------\n");
-    	printf("%d - %s %s - type : %s - total debt: %.2f", current->customerid, current->name, 
-		current->surname, current->customertype, current->totaldebt);
-        current = current->nextcust;
+    while (temp != NULL) {
+        next = temp->nextcust;
+        free(temp);
+        temp = next;
     }
+
+    *customers = NULL;
 }
-
-
-
-
-char* createLoanID(struct customer* customer) {
-    static char loanID[30];
-    int count = 0;
-    struct loan* currentLoan = customer->loanptr;
-    while (currentLoan != NULL) {
-        count++;
-        currentLoan = currentLoan->nextloan;
-    }
-    sprintf(loanID, "%dL%d", customer->customerid, count);
-    return loanID;
-}
-
-void readLoans(struct customer *head) {
-    struct customer *current = head;
-    
-    while (current != NULL) {
-        FILE *file = fopen("loans.txt", "r");
-        if (file == NULL) {
-            printf("Error opening loans.txt file.\n");
-            return;
-        }
-
-        struct loan *prevLoan = NULL;
-        struct loan *currentLoan = current->loanptr;
-
-        // Find the last loan in the linked list
-        while (currentLoan != NULL && currentLoan->nextloan != NULL) {
-            currentLoan = currentLoan->nextloan;
-        }
-
-        char name[20], surname[30], type[30], processdate[11];
-        float totalamount;
-        int totalinstallmentnum;
-
-        // Read loan details from the file and create loan struct
-        while (fscanf(file, "%s %s %s %f %d %s", name, surname, type, &totalamount, &totalinstallmentnum, processdate) == 6) {
-            if (strcmp(name, current->name) == 0 && strcmp(surname, current->surname) == 0) {
-                struct loan *newLoan = (struct loan *)malloc(sizeof(struct loan));
-                if (newLoan == NULL) {
-                    printf("Memory allocation failed.\n");
-                    fclose(file);
-                    return;
-                }
-                strcpy(newLoan->loanid, createLoanID(current));
-                strcpy(newLoan->type, type);
-                newLoan->totalamount = totalamount;
-                newLoan->totalinstallmentnum = totalinstallmentnum;
-                strcpy(newLoan->processdate, processdate);
-                newLoan->nextloan = NULL;
-                newLoan->insptr = NULL;
-
-                // Insert the new loan into the linked list based on processdate
-                if (currentLoan == NULL) {
-                    current->loanptr = newLoan;
-                } else {
-                    currentLoan->nextloan = newLoan;
-                }
-                currentLoan = newLoan;
-            }
-        }
-
-        fclose(file);
-        current = current->nextcust;
-    }
-}
-
-void printLoans(struct customer *head){
-	struct customer *currentCustomer = head;
-	struct loan* currentLoan = currentCustomer->loanptr;
-	
-	printf("\n\n#############################################################\n");
-	while(currentCustomer != NULL){
-		while (currentLoan != NULL) {
-		printf("---------------------------------------------------\n");
-		printf("%d - %s %s - type : %s - total debt: %.2f\n", currentCustomer->customerid, 
-		currentCustomer->name, currentCustomer->surname, 
-		currentCustomer->customertype, currentCustomer->totaldebt);
-		printf("%s : ½s - %.2f - %s - %d\n", currentLoan->loanid, currentLoan->type, 
-		currentLoan->totalamount, currentLoan->totalinstallmentnum);
-        currentLoan = currentLoan->nextloan;
-        }
-        currentCustomer = currentCustomer->nextcust;
-    }  
-	
-}
-
-	
 
 int main(){
-    customer *customers;
+    customer *customers = NULL;
     int option = 1000;
     while (option != 0){
         printf("\n\n#############################################################\n");
@@ -196,16 +117,18 @@ int main(){
 
         switch (option){
             case 1:
-                readCustomers(&customers);
+                //readCustomers function call here
+                readCustomers(&customers, "customers.txt");
                 break;
             case 2:
-            	printCustomers(customers);
+                //printCustomers function call here
+                printCustomers(customers);
                 break;
             case 3:
-                readLoans(&customers);
+                //readLoans function call here
                 break;
             case 4:
-                printLoans(customers);
+                //printLoans function call here
                 break;
             case 5:
                 //createInstallments function call here

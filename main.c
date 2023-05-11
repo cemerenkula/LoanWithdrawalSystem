@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 typedef struct installment{
     char insid[30];
@@ -29,121 +30,75 @@ typedef struct customer{
     loan *loanptr;
 }customer;
 
-void newCustomerFunc(customer* head, customer* currNode, int id){
-    customer* newCustomer;
-    newCustomer = (customer*) malloc(sizeof(customer));
-
-    if (head == NULL) {
-        head = newCustomer;
-        currNode = newCustomer;
-        newCustomer->customerid = id;
-        newCustomer->totaldebt = 0;
-        newCustomer->loanptr = NULL;
-    }
-    else {
-        currNode->nextcust = newCustomer;
-        currNode = newCustomer;
-        newCustomer->customerid = id;
-        newCustomer->totaldebt = 0;
-        newCustomer->loanptr = NULL;
-    }
-}
-
-void readCustomers(){
-
-    int letter;
-    int space = 0;
-    int i = 0;
-    int id = 1;
-
-    //Creating head and currCustomer
-    customer* head = NULL;
-    customer* currCustomer = NULL;
-
-    //Creating First Customer Node
-    customer* newCustomer;
-    newCustomer = (customer*) malloc(sizeof(customer));
-    head = newCustomer;
-    currCustomer = newCustomer;
+void insertCustomer(customer** customers, char name[], char surname[], char customertype[], int id, double totaldebt) {
+    customer* newCustomer = (customer*)malloc(sizeof(customer));
+    strcpy(newCustomer->name, name);
+    strcpy(newCustomer->surname, surname);
+    strcpy(newCustomer->customertype, customertype);
     newCustomer->customerid = id;
-    newCustomer->nextcust = NULL;
-    newCustomer->totaldebt = 0;
+    newCustomer->totaldebt = totaldebt;
     newCustomer->loanptr = NULL;
+    newCustomer->nextcust = NULL;
 
-    //Reading File
-    FILE *customer_txt = fopen("customer.txt", "r");
-    if(customer_txt == NULL){
-        printf("Error opening file\n");
-    }
-
-    //Getting First Letter
-    letter = fgetc(customer_txt);
-
-
-
-    //Reading letter by letter
-    while(letter != EOF){
-
-        if(letter == "\n"){
-            id++;
-            newCustomerFunc(head, currCustomer, id);
-            letter = fgetc(customer_txt);
-            space = 0;
-            i = 0;
+    if (*customers == NULL) {
+        *customers = newCustomer;
+    } else {
+        customer* temp = *customers;
+        while (temp->nextcust != NULL) {
+            temp = temp->nextcust;
         }
-
-
-
-        switch (space){
-            case 0:
-                if(letter == " ") {
-                    newCustomer->name[i] = '\0';
-                }
-                else {
-                    newCustomer->name[i] = letter;
-                }
-                break;
-            case 1:
-                if(letter == " ") {
-                    newCustomer->surname[i] = '\0';
-                }
-                else {
-                    newCustomer->surname[i] = letter;
-                }
-                break;
-            case 2:
-                newCustomer->customertype[i] = letter;
-                break;
-        }
-
-        if(letter == " "){
-            space++;
-            letter = fgetc(customer_txt);
-            i = 0;
-            continue;
-        }
-
-        letter = fgetc(customer_txt);
-        i++;
-
+        temp->nextcust = newCustomer;
     }
 }
 
-void printCustomers(customer *n){
-    printf("--------------------------------------------------");
-    while(n != NULL){
-        for (int i = 0; n->name[i] != '\0'; i++) {
-            printf("%c", n->name[i]);
-        }
+void printCustomers(customer* customers) {
+    customer* temp = customers;
+    while (temp != NULL) {
+        printf("--------------------------------------------------\n");
+        printf("%d - %s %s type : %s total debt : %.0f\n", temp->customerid, temp->name, temp->surname, temp->customertype, temp->totaldebt);
+        temp = temp->nextcust;
+    }
+}
 
-        n = n->nextcust;
-        printf("\n");
+void readCustomers(customer** customers, const char* filename) {
+    FILE* customers_txt = fopen(filename, "r");
+
+    char line[150];
+    char name[20];
+    char surname[30];
+    char customerType[20];
+    int id = 1;
+    double totaldebt = 0;
+
+    if (customers_txt == NULL) {
+        perror("Error opening file");
+        exit(EXIT_FAILURE);
     }
 
+    while (fgets(line, sizeof(line), customers_txt) != NULL) {
+        sscanf(line, "%s %s %s", name, surname, customerType);
+        insertCustomer(customers, name, surname, customerType, id, totaldebt);
+        id++;
+    }
+
+    fclose(customers_txt);
+}
+
+void freeCustomerList(customer** customers) {
+    customer* temp = *customers;
+    customer* next;
+
+    while (temp != NULL) {
+        next = temp->nextcust;
+        free(temp);
+        temp = next;
+    }
+
+    *customers = NULL;
 }
 
 int main(){
-    customer *customers;
+    customer *customers = NULL;
     int option = 1000;
     while (option != 0){
         printf("\n\n#############################################################\n");
@@ -163,11 +118,11 @@ int main(){
         switch (option){
             case 1:
                 //readCustomers function call here
-                readCustomers();
+                readCustomers(&customers, "customers.txt");
                 break;
             case 2:
                 //printCustomers function call here
-                printCustomers(head);
+                printCustomers(customers);
                 break;
             case 3:
                 //readLoans function call here

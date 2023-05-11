@@ -37,7 +37,6 @@ void insertCustomer(customer** customers, char name[], char surname[], char cust
     strcpy(newCustomer->customertype, customertype);
     newCustomer->customerid = id;
     newCustomer->totaldebt = totaldebt;
-    newCustomer->loanptr = NULL;
     newCustomer->nextcust = NULL;
 
     if (*customers == NULL) {
@@ -55,7 +54,7 @@ void printCustomers(customer* customers) {
     customer* temp = customers;
     while (temp != NULL) {
         printf("--------------------------------------------------\n");
-        printf("%d - %s %s type : %s total debt : %.0f\n", temp->customerid, temp->name, temp->surname, temp->customertype, temp->totaldebt);
+        printf("%d - %s %s - type : %s total debt : %.0f\n", temp->customerid, temp->name, temp->surname, temp->customertype, temp->totaldebt);
         temp = temp->nextcust;
     }
 }
@@ -97,6 +96,73 @@ void freeCustomerList(customer** customers) {
     *customers = NULL;
 }
 
+void insertLoan(customer** customers, char name[], char surname[], char loanType[], float totalAmount, int totalInstallmentNum, char processDate[]){
+    customer* temp = *customers;
+    while (temp != NULL) {
+        if (strcmp(temp->name, name) == 0 && strcmp(temp->surname, surname) == 0) {
+            break;
+        }
+        temp = temp->nextcust;
+    }
+
+    loan* newLoan = (loan*)malloc(sizeof(loan));
+    strcpy(newLoan->type, loanType);
+    newLoan->totalamount = totalAmount;
+    newLoan->totalinstallmentnum = totalInstallmentNum;
+    strcpy(newLoan->processdate, processDate);
+    newLoan->nextloan = NULL;
+    newLoan->insptr = NULL;
+
+    if (temp->loanptr == NULL) {
+        temp->loanptr = newLoan;
+    }
+    else {
+        loan* tempLoan = temp->loanptr;
+        while(tempLoan->nextloan != NULL){
+            tempLoan = tempLoan->nextloan;
+        }
+        tempLoan->nextloan = newLoan;
+    }
+}
+
+void printLoans(customer* customers){
+    customer* temp = customers;
+    while(temp != NULL){
+        printf("--------------------------------------------------\n");
+        printf("%d - %s %s - type : %s total debt : %.0f\n", temp->customerid, temp->name, temp->surname, temp->customertype, temp->totaldebt);
+        loan* tempLoan = temp->loanptr;
+        while(tempLoan != NULL){
+            printf(" : %s - %f - %s - %d\n", tempLoan->type, tempLoan->totalamount, tempLoan->processdate, tempLoan->totalinstallmentnum);
+            tempLoan = tempLoan->nextloan;
+        }
+        temp = temp->nextcust;
+    }
+}
+
+void readLoans(customer** customers, const char* filename){
+    FILE* loans_txt = fopen(filename, "r");
+    char line[150];
+    char name[20];
+    char surname[30];
+    char loanType[30];
+    float totalAmount;
+    int totalInstallmentNum;
+    char processDate[11];
+    int customerid;
+
+    if (loans_txt == NULL) {
+        perror("Error opening file");
+        exit(EXIT_FAILURE);
+    }
+
+    while (fgets(line, sizeof(line), loans_txt) != NULL) {
+        sscanf(line, "%s %s %s %f %d %s", name, surname, loanType, &totalAmount, &totalInstallmentNum, processDate);
+        insertLoan(customers, name, surname, loanType, totalAmount, totalInstallmentNum, processDate);
+    }
+    fclose(loans_txt);
+}
+
+
 int main(){
     customer *customers = NULL;
     int option = 1000;
@@ -126,9 +192,11 @@ int main(){
                 break;
             case 3:
                 //readLoans function call here
+                readLoans(&customers, "loans.txt");
                 break;
             case 4:
                 //printLoans function call here
+                printLoans(customers);
                 break;
             case 5:
                 //createInstallments function call here

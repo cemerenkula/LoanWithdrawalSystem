@@ -96,7 +96,57 @@ void freeCustomerList(customer** customers) {
     *customers = NULL;
 }
 
-void insertLoan(customer** customers, char name[], char surname[], char loanType[], float totalAmount, int totalInstallmentNum, char processDate[]){
+void loanSort(customer** customers) {
+    int swapped;
+    customer *ptr1;
+    loan *lptr, *prev_lptr = NULL;
+
+    if (*customers == NULL) {
+        return;
+    }
+
+    do {
+        swapped = 0;
+        ptr1 = *customers;
+
+        while (ptr1 != NULL) {
+            lptr = ptr1->loanptr;
+
+            while (lptr != prev_lptr && lptr->nextloan != NULL) {
+                loan* next_lptr = lptr->nextloan;
+
+                // Extract the year, month, and day values from the two process dates
+                int year1, month1, day1, year2, month2, day2;
+                sscanf(lptr->processdate, "%d/%d/%d", &day1, &month1, &year1);
+                sscanf(next_lptr->processdate, "%d/%d/%d", &day2, &month2, &year2);
+
+                // Compare the two process dates
+                if (year1 > year2 || (year1 == year2 && (month1 > month2 || (month1 == month2 && day1 > day2)))) {
+                    // Swap the nodes if the left node's processDate is greater than the right node's processDate
+                    lptr->nextloan = next_lptr->nextloan;
+                    next_lptr->nextloan = lptr;
+                    if (prev_lptr != NULL) {
+                        prev_lptr->nextloan = next_lptr;
+                    }
+                    else {
+                        ptr1->loanptr = next_lptr;
+                    }
+                    prev_lptr = next_lptr;
+                    swapped = 1;
+                }
+                else {
+                    prev_lptr = lptr;
+                    lptr = lptr->nextloan;
+                }
+            }
+
+            prev_lptr = NULL;
+            ptr1 = ptr1->nextcust;
+        }
+    } while (swapped);
+}
+
+void insertLoan(customer** customers, char name[], char surname[], char loanType[], float totalAmount, int totalInstallmentNum, char processDate[]) {
     customer* temp = *customers;
     while (temp != NULL) {
         if (strcmp(temp->name, name) == 0 && strcmp(temp->surname, surname) == 0) {
@@ -113,17 +163,22 @@ void insertLoan(customer** customers, char name[], char surname[], char loanType
     newLoan->nextloan = NULL;
     newLoan->insptr = NULL;
 
-    if (temp->loanptr == NULL) {
-        temp->loanptr = newLoan;
-    }
-    else {
-        loan* tempLoan = temp->loanptr;
-        while(tempLoan->nextloan != NULL){
-            tempLoan = tempLoan->nextloan;
+    if (temp != NULL) {
+        if (temp->loanptr == NULL) {
+            temp->loanptr = newLoan;
         }
-        tempLoan->nextloan = newLoan;
+        else {
+            loan* current = temp->loanptr;
+            while (current->nextloan != NULL) {
+                current = current->nextloan;
+            }
+            current->nextloan = newLoan;
+        }
     }
+
+    loanSort(customers);
 }
+
 
 void printLoans(customer* customers){
     customer* temp = customers;
@@ -132,10 +187,27 @@ void printLoans(customer* customers){
         printf("%d - %s %s - type : %s total debt : %.0f\n", temp->customerid, temp->name, temp->surname, temp->customertype, temp->totaldebt);
         loan* tempLoan = temp->loanptr;
         while(tempLoan != NULL){
-            printf(" : %s - %f - %s - %d\n", tempLoan->type, tempLoan->totalamount, tempLoan->processdate, tempLoan->totalinstallmentnum);
+            printf("    %s : %s - %f - %s - %d\n",tempLoan->loanid , tempLoan->type, tempLoan->totalamount, tempLoan->processdate, tempLoan->totalinstallmentnum);
             tempLoan = tempLoan->nextloan;
         }
         temp = temp->nextcust;
+    }
+}
+
+void createLoanID(customer** customers){
+    customer* temp = *customers;
+
+    int custNum = 1;
+    while(temp != NULL){
+        loan* tempLoan = temp->loanptr;
+        int loanNum = 1;
+        while(tempLoan != NULL){
+            sprintf(tempLoan->loanid, "%dL%d", custNum, loanNum);
+            tempLoan = tempLoan->nextloan;
+            loanNum++;
+        }
+        temp = temp->nextcust;
+        custNum++;
     }
 }
 
@@ -158,10 +230,93 @@ void readLoans(customer** customers, const char* filename){
     while (fgets(line, sizeof(line), loans_txt) != NULL) {
         sscanf(line, "%s %s %s %f %d %s", name, surname, loanType, &totalAmount, &totalInstallmentNum, processDate);
         insertLoan(customers, name, surname, loanType, totalAmount, totalInstallmentNum, processDate);
+
     }
+    createLoanID(customers);
     fclose(loans_txt);
 }
 
+void createInstallments(customer** customers){
+    customer* temp = *customers;
+    int instalmentNum = 1;
+    int dateIncrement = 0;
+
+    while(temp != NULL){
+        loan* tempLoan = temp->loanptr;
+
+        while(tempLoan != NULL){
+            while(instalmentNum <= tempLoan->totalinstallmentnum){
+                installment* newInstallment  = (installment*)malloc(sizeof(installment));
+                sprintf(newInstallment->insid, "%sI%d", tempLoan->loanid, instalmentNum);
+                newInstallment->ispaid = 0;
+                newInstallment->amount = tempLoan->totalamount / tempLoan->totalinstallmentnum;
+
+                //Date arrange
+                //int day = 0;
+                //int month = 0;
+                //int year = 0;
+                //sscanf(tempLoan->processdate, "%d/%d/%d", &day, &month, &year);
+                //month += dateIncrement;
+                //if(month == 12){
+                //    month = 1;
+                //    year++;
+                //}
+                //sprintf(newInstallment->installmentdate, "%02d/%02d/%d", day, month, year);
+                
+                newInstallment->nextins = NULL;
+
+                if(temp != NULL){
+                    if(tempLoan != NULL){
+                        if(tempLoan->insptr == NULL){
+                            tempLoan->insptr = newInstallment;
+                        }
+                        else{
+                            installment* current = tempLoan->insptr;
+                            while(current->nextins != NULL){
+                                current = current->nextins;
+                            }
+                            current->nextins = newInstallment;
+                        }
+                    }
+                }
+                dateIncrement++;
+                instalmentNum++;
+            }
+            tempLoan = tempLoan->nextloan;
+            instalmentNum = 1;
+        }
+        temp = temp->nextcust;
+    }
+}
+
+void printInstallments(customer* customers){
+    customer* temp = customers;
+    while(temp != NULL){
+        printf("--------------------------------------------------\n");
+        printf("%d - %s %s - type : %s total debt : %.0f\n", temp->customerid, temp->name, temp->surname, temp->customertype, temp->totaldebt);
+        loan* tempLoan = temp->loanptr;
+        while(tempLoan != NULL){
+            printf("    %s : %s - %f - %s - %d\n",tempLoan->loanid , tempLoan->type, tempLoan->totalamount, tempLoan->processdate, tempLoan->totalinstallmentnum);
+            installment* tempInstallment = tempLoan->insptr;
+            while(tempInstallment != NULL){
+                char paymentStatusMessage[16];
+                if(tempInstallment->ispaid == 0){
+                    strcpy(paymentStatusMessage, "To be Paid");
+                }
+                else if(tempInstallment->ispaid == 1){
+                    strcpy(paymentStatusMessage, "Paid");
+                }
+                else{
+                    strcpy(paymentStatusMessage, "Delayed Payment");
+                }
+                printf("        %s -> %s - %f - %s\n", tempInstallment->insid, tempInstallment->installmentdate, tempInstallment->amount, paymentStatusMessage);
+                tempInstallment = tempInstallment->nextins;
+            }
+            tempLoan = tempLoan->nextloan;
+        }
+        temp = temp->nextcust;
+    }
+}
 
 int main(){
     customer *customers = NULL;
@@ -200,9 +355,11 @@ int main(){
                 break;
             case 5:
                 //createInstallments function call here
+                createInstallments(&customers);
                 break;
             case 6:
                 //printInstallments function call here
+                printInstallments(customers);
                 break;
             case 7:
                 //readPayments function call here

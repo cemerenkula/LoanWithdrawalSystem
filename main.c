@@ -38,7 +38,8 @@ void insertCustomer(customer** customers, char name[], char surname[], char cust
     newCustomer->customerid = id;
     newCustomer->totaldebt = totaldebt;
     newCustomer->nextcust = NULL;
-
+    newCustomer->loanptr = NULL;
+    
     if (*customers == NULL) {
         *customers = newCustomer;
     } else {

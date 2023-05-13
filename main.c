@@ -39,7 +39,7 @@ void insertCustomer(customer** customers, char name[], char surname[], char cust
     newCustomer->totaldebt = totaldebt;
     newCustomer->nextcust = NULL;
     newCustomer->loanptr = NULL;
-    
+
     if (*customers == NULL) {
         *customers = newCustomer;
     } else {
@@ -239,31 +239,33 @@ void readLoans(customer** customers, const char* filename){
 
 void createInstallments(customer** customers){
     customer* temp = *customers;
-    int instalmentNum = 1;
-    int dateIncrement = 0;
+    int installmentNum = 1;
+
+    int day = 0;
+    int month = 0;
+    int year = 0;
 
     while(temp != NULL){
         loan* tempLoan = temp->loanptr;
+        sscanf(tempLoan->processdate, "%d/%d/%d", &day, &month, &year);
 
         while(tempLoan != NULL){
-            while(instalmentNum <= tempLoan->totalinstallmentnum){
+
+            while(installmentNum <= tempLoan->totalinstallmentnum){
                 installment* newInstallment  = (installment*)malloc(sizeof(installment));
-                sprintf(newInstallment->insid, "%sI%d", tempLoan->loanid, instalmentNum);
+                sprintf(newInstallment->insid, "%sI%d", tempLoan->loanid, installmentNum);
                 newInstallment->ispaid = 0;
                 newInstallment->amount = tempLoan->totalamount / tempLoan->totalinstallmentnum;
 
                 //Date arrange
-                //int day = 0;
-                //int month = 0;
-                //int year = 0;
-                //sscanf(tempLoan->processdate, "%d/%d/%d", &day, &month, &year);
-                //month += dateIncrement;
-                //if(month == 12){
-                //    month = 1;
-                //    year++;
-                //}
-                //sprintf(newInstallment->installmentdate, "%02d/%02d/%d", day, month, year);
-                
+
+                if(month > 12){
+                    month = 1;
+                    year++;
+                }
+                sprintf(newInstallment->installmentdate, "%02d/%02d/%d", day, month, year);
+                month++;
+
                 newInstallment->nextins = NULL;
 
                 if(temp != NULL){
@@ -280,11 +282,11 @@ void createInstallments(customer** customers){
                         }
                     }
                 }
-                dateIncrement++;
-                instalmentNum++;
+
+                installmentNum++;
             }
             tempLoan = tempLoan->nextloan;
-            instalmentNum = 1;
+            installmentNum = 1;
         }
         temp = temp->nextcust;
     }

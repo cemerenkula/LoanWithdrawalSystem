@@ -176,6 +176,9 @@ void printLoans(customer* customers){
         printf("--------------------------------------------------\n");
         printf("%d - %s %s - type : %s total debt : %.0f\n", temp->customerid, temp->name, temp->surname, temp->customertype, temp->totaldebt);
         loan* tempLoan = temp->loanptr;
+        if(tempLoan == NULL){
+            printf("        no loan\n");
+        }
         while(tempLoan != NULL){
             printf("    %s : %s - %f - %s - %d\n",tempLoan->loanid , tempLoan->type, tempLoan->totalamount, tempLoan->processdate, tempLoan->totalinstallmentnum);
             tempLoan = tempLoan->nextloan;
@@ -287,6 +290,9 @@ void printInstallments(customer* customers){
         printf("--------------------------------------------------\n");
         printf("%d - %s %s - type : %s total debt : %.0f\n", temp->customerid, temp->name, temp->surname, temp->customertype, temp->totaldebt);
         loan* tempLoan = temp->loanptr;
+        if(tempLoan == NULL){
+            printf("        no loan\n");
+        }
         while(tempLoan != NULL){
             printf("    %s : %s - %f - %s - %d\n",tempLoan->loanid , tempLoan->type, tempLoan->totalamount, tempLoan->processdate, tempLoan->totalinstallmentnum);
             installment* tempInstallment = tempLoan->insptr;
@@ -407,12 +413,63 @@ void findUnpaidInstallments(customer** customers){
         if(delayedInstallments != 0){
             printf("%s %s : Debt %.2f Number of Delayed Installments %d\n", tempCust->name, tempCust->surname, totalDebt, delayedInstallments);
         }
+        tempCust->totaldebt = totalDebt;
         tempCust = tempCust->nextcust;
         totalDebt = 0;
         delayedInstallments = 0;
     }
-
 }
+
+void deletePaidInstallments(customer** customers) {
+    customer* tempCust = *customers;
+
+    while (tempCust != NULL) {
+        loan* tempLoan = tempCust->loanptr;
+
+        while (tempLoan != NULL) {
+            int isAllPaid = 1;
+            installment* tempIns = tempLoan->insptr;
+
+            while (tempIns != NULL) {
+                if (tempIns->ispaid != 1) {
+                    isAllPaid = 0;
+                    break;
+                }
+                tempIns = tempIns->nextins;
+            }
+
+            if (isAllPaid == 1) {
+                installment* tempIns = tempLoan->insptr;
+                while (tempIns != NULL) {
+                    installment* nextIns = tempIns->nextins;
+                    free(tempIns);
+                    tempIns = nextIns;
+                }
+                tempLoan->insptr = NULL;
+
+                loan* prevLoan = NULL;
+                loan* currLoan = tempCust->loanptr;
+                while (currLoan != NULL) {
+                    if (currLoan == tempLoan) {
+                        if (prevLoan == NULL) {
+                            tempCust->loanptr = tempLoan->nextloan;
+                        } else {
+                            prevLoan->nextloan = tempLoan->nextloan;
+                        }
+                        free(tempLoan);
+                        break;
+                    }
+                    prevLoan = currLoan;
+                    currLoan = currLoan->nextloan;
+                }
+            }
+            tempLoan = tempLoan->nextloan;
+        }
+        tempCust = tempCust->nextcust;
+    }
+}
+
+
 
 int main(){
     customer *customers = NULL;
@@ -467,6 +524,7 @@ int main(){
                 break;
             case 9:
                 //DeletePaidInstallments function call here
+                deletePaidInstallments(&customers);
                 break;
             case 0:
                 break;

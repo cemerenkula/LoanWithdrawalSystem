@@ -84,18 +84,6 @@ void readCustomers(customer** customers, const char* filename) {
     fclose(customers_txt);
 }
 
-void freeCustomerList(customer** customers) {
-    customer* temp = *customers;
-    customer* next;
-
-    while (temp != NULL) {
-        next = temp->nextcust;
-        free(temp);
-        temp = next;
-    }
-
-    *customers = NULL;
-}
 
 void loanSort(customer** customers) {
     int swapped;
@@ -163,6 +151,7 @@ void insertLoan(customer** customers, char name[], char surname[], char loanType
     strcpy(newLoan->processdate, processDate);
     newLoan->nextloan = NULL;
     newLoan->insptr = NULL;
+
 
     if (temp != NULL) {
         if (temp->loanptr == NULL) {
@@ -258,7 +247,6 @@ void createInstallments(customer** customers){
                 newInstallment->amount = tempLoan->totalamount / tempLoan->totalinstallmentnum;
 
                 //Date arrange
-
                 if(month > 12){
                     month = 1;
                     year++;
@@ -321,6 +309,66 @@ void printInstallments(customer* customers){
     }
 }
 
+void markInstallmentAsPaid(customer** customers, int customerIdInt, char loanId[], char installmentId[], char allId[], char insid[]) {
+    customer* tempCust = *customers;
+    while (tempCust != NULL) {
+        loan* tempLoan = NULL;
+        if(tempCust->customerid == customerIdInt){
+            tempLoan = tempCust->loanptr;
+        }
+        while (tempLoan != NULL) {
+            installment* tempIns = NULL;
+            if (strcmp(tempLoan->loanid, allId) == 0) {
+                tempIns = tempLoan->insptr;
+            }
+                while (tempIns != NULL) {
+                    if(strcmp(installmentId, "ALL") == 0){
+                        tempIns->ispaid = 1;
+                    }
+                    if (strcmp(tempIns->insid, insid) == 0) {
+                        tempIns->ispaid = 1;
+                        return;
+                    }
+                    tempIns = tempIns->nextins;
+                }
+            tempLoan = tempLoan->nextloan;
+        }
+        tempCust = tempCust->nextcust;
+    }
+}
+
+
+void readPayments(customer** customers, const char* filename) {
+    FILE* payments_txt = fopen(filename, "r");
+    char line[150];
+    char customerId[3];
+    char loanId[3];
+    char installmentId[4];
+    char allId[6];
+    char insid[30];
+
+
+    if (payments_txt == NULL) {
+        perror("Error opening file");
+        exit(EXIT_FAILURE);
+    }
+
+    while (fgets(line, sizeof(line), payments_txt) != NULL) {
+        sscanf(line, "%[^L]L%[^ ] %[^\n]", customerId, loanId, installmentId);
+        sscanf(line, "%s %s", allId, installmentId);
+        if(strcmp(installmentId, "ALL") != 0){
+            sprintf(insid, "%sI%s", allId, installmentId);
+        }
+        int customerIdInt = atoi(customerId);
+        markInstallmentAsPaid(customers, customerIdInt, loanId, installmentId, allId, insid);
+    }
+
+    fclose(payments_txt);
+}
+
+
+
+
 int main(){
     customer *customers = NULL;
     int option = 1000;
@@ -366,6 +414,7 @@ int main(){
                 break;
             case 7:
                 //readPayments function call here
+                readPayments(&customers, "payments.txt");
                 break;
             case 8:
                 //findUnpaidInstallments function call here

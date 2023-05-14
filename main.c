@@ -405,7 +405,7 @@ void findUnpaidInstallments(customer** customers){
             tempLoan = tempLoan->nextloan;
         }
         if(delayedInstallments != 0){
-            printf("%s %s : Debt %f Number of Delayed Installments %d\n", tempCust->name, tempCust->surname, totalDebt, delayedInstallments);
+            printf("%s %s : Debt %.2f Number of Delayed Installments %d\n", tempCust->name, tempCust->surname, totalDebt, delayedInstallments);
         }
         tempCust = tempCust->nextcust;
         totalDebt = 0;

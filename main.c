@@ -527,6 +527,7 @@ int main(){
                 deletePaidInstallments(&customers);
                 break;
             case 0:
+                exit(0);
                 break;
             default :
                 printf("invalid option\n");

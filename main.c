@@ -307,7 +307,7 @@ void printInstallments(customer* customers){
                 else{
                     strcpy(paymentStatusMessage, "Delayed Payment");
                 }
-                printf("        %s -> %s - %f - %s\n", tempInstallment->insid, tempInstallment->installmentdate, tempInstallment->amount, paymentStatusMessage);
+                printf("        %s -> %s - %f   - %s\n", tempInstallment->insid, tempInstallment->installmentdate, tempInstallment->amount, paymentStatusMessage);
                 tempInstallment = tempInstallment->nextins;
             }
             tempLoan = tempLoan->nextloan;

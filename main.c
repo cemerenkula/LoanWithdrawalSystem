@@ -236,9 +236,9 @@ void createInstallments(customer** customers){
 
     while(temp != NULL){
         loan* tempLoan = temp->loanptr;
-        sscanf(tempLoan->processdate, "%d/%d/%d", &day, &month, &year);
 
         while(tempLoan != NULL){
+            sscanf(tempLoan->processdate, "%d/%d/%d", &day, &month, &year);
 
             while(installmentNum <= tempLoan->totalinstallmentnum){
                 installment* newInstallment  = (installment*)malloc(sizeof(installment));
@@ -274,6 +274,7 @@ void createInstallments(customer** customers){
                 installmentNum++;
             }
             tempLoan = tempLoan->nextloan;
+
             installmentNum = 1;
         }
         temp = temp->nextcust;
@@ -309,7 +310,7 @@ void printInstallments(customer* customers){
     }
 }
 
-void markInstallmentAsPaid(customer** customers, int customerIdInt, char loanId[], char installmentId[], char allId[], char insid[]) {
+void markInstallmentAsPaid(customer** customers, int customerIdInt, char installmentId[], char allId[], char insid[]) {
     customer* tempCust = *customers;
     while (tempCust != NULL) {
         loan* tempLoan = NULL;
@@ -360,7 +361,7 @@ void readPayments(customer** customers, const char* filename) {
             sprintf(insid, "%sI%s", allId, installmentId);
         }
         int customerIdInt = atoi(customerId);
-        markInstallmentAsPaid(customers, customerIdInt, loanId, installmentId, allId, insid);
+        markInstallmentAsPaid(customers, customerIdInt, installmentId, allId, insid);
     }
 
     fclose(payments_txt);
@@ -368,6 +369,50 @@ void readPayments(customer** customers, const char* filename) {
 
 
 
+void findUnpaidInstallments(customer** customers){
+    char inputDate[11];
+    double totalDebt = 0;
+    int delayedInstallments = 0;
+    int day1, day2, month1, month2, year1, year2;
+
+    printf("please enter date:\n");
+    scanf("%s", inputDate);
+
+    sscanf(inputDate, "%d/%d/%d", &day1, &month1, &year1);
+
+
+    customer* tempCust = *customers;
+    while (tempCust != NULL) {
+        loan* tempLoan = NULL;
+        tempLoan = tempCust->loanptr;
+
+        while (tempLoan != NULL) {
+            installment* tempIns = NULL;
+            tempIns = tempLoan->insptr;
+
+            while (tempIns != NULL) {
+                sscanf(tempIns->installmentdate, "%d/%d/%d", &day2, &month2, &year2);
+                if (year1 > year2 || (year1 == year2 && (month1 > month2 || (month1 == month2 && day1 > day2)))){
+                    if(tempIns->ispaid != 1){
+                        tempIns->ispaid = 2;
+                        delayedInstallments++;
+                        totalDebt += tempIns->amount;
+                    }
+                }
+
+                tempIns = tempIns->nextins;
+            }
+            tempLoan = tempLoan->nextloan;
+        }
+        if(delayedInstallments != 0){
+            printf("%s %s : Debt %f Number of Delayed Installments %d\n", tempCust->name, tempCust->surname, totalDebt, delayedInstallments);
+        }
+        tempCust = tempCust->nextcust;
+        totalDebt = 0;
+        delayedInstallments = 0;
+    }
+
+}
 
 int main(){
     customer *customers = NULL;
@@ -418,6 +463,7 @@ int main(){
                 break;
             case 8:
                 //findUnpaidInstallments function call here
+                findUnpaidInstallments(&customers);
                 break;
             case 9:
                 //DeletePaidInstallments function call here

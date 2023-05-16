@@ -17,7 +17,7 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="1ba18574-0caf-43af-a4ba-825e6cb6151c" name="Changes" comment="First work">
+    <list default="true" id="1ba18574-0caf-43af-a4ba-825e6cb6151c" name="Changes" comment="readLoan, insertLoan, printLoan add but do not work">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cmake-build-debug/.ninja_deps" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug/.ninja_deps" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/cmake-build-debug/.ninja_log" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug/.ninja_log" afterDir="false" />
@@ -32,6 +32,7 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="ClangdSettings">
+    <option name="clangTidyViaClangd" value="false" />
     <option name="formatViaClangd" value="false" />
   </component>
   <component name="ExecutionTargetManager" SELECTED_TARGET="CMakeBuildProfile:Debug" />
@@ -92,7 +93,14 @@
       <workItem from="1683734385021" duration="9199000" />
       <workItem from="1683756400820" duration="1584000" />
       <workItem from="1683771396315" duration="3248000" />
-      <workItem from="1683818509476" duration="10241000" />
+      <workItem from="1683818509476" duration="11260000" />
+      <workItem from="1683839549086" duration="735000" />
+      <workItem from="1683840295480" duration="85000" />
+      <workItem from="1683974180195" duration="11303000" />
+      <workItem from="1684087039948" duration="13049000" />
+      <workItem from="1684102935722" duration="39000" />
+      <workItem from="1684232692166" duration="170000" />
+      <workItem from="1684239147200" duration="986000" />
     </task>
     <task id="LOCAL-00001" summary="First work">
       <created>1683774444289</created>
@@ -101,7 +109,14 @@
       <option name="project" value="LOCAL" />
       <updated>1683774444289</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="First work">
+      <created>1683838724788</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1683838724788</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">

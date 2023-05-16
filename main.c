@@ -51,11 +51,13 @@ void insertCustomer(customer** customers, char name[], char surname[], char cust
     }
 }
 
-void printCustomers(customer* customers) {
+void printCustomers(customer* customers, FILE* output_txt) {
     customer* temp = customers;
     while (temp != NULL) {
         printf("--------------------------------------------------\n");
         printf("%d - %s %s - type : %s total debt : %.0f\n", temp->customerid, temp->name, temp->surname, temp->customertype, temp->totaldebt);
+        fprintf(output_txt, "--------------------------------------------------\n");
+        fprintf(output_txt, "%d - %s %s - type : %s total debt : %.0f\n", temp->customerid, temp->name, temp->surname, temp->customertype, temp->totaldebt);
         temp = temp->nextcust;
     }
 }
@@ -170,17 +172,21 @@ void insertLoan(customer** customers, char name[], char surname[], char loanType
 }
 
 
-void printLoans(customer* customers){
+void printLoans(customer* customers, FILE* output_txt){
     customer* temp = customers;
     while(temp != NULL){
         printf("--------------------------------------------------\n");
         printf("%d - %s %s - type : %s total debt : %.0f\n", temp->customerid, temp->name, temp->surname, temp->customertype, temp->totaldebt);
+        fprintf(output_txt, "--------------------------------------------------\n");
+        fprintf(output_txt, "%d - %s %s - type : %s total debt : %.0f\n", temp->customerid, temp->name, temp->surname, temp->customertype, temp->totaldebt);
         loan* tempLoan = temp->loanptr;
         if(tempLoan == NULL){
             printf("        no loan\n");
+            fprintf(output_txt, "        no loan\n");
         }
         while(tempLoan != NULL){
             printf("    %s : %s - %f - %s - %d\n",tempLoan->loanid , tempLoan->type, tempLoan->totalamount, tempLoan->processdate, tempLoan->totalinstallmentnum);
+            fprintf(output_txt, "    %s : %s - %f - %s - %d\n",tempLoan->loanid , tempLoan->type, tempLoan->totalamount, tempLoan->processdate, tempLoan->totalinstallmentnum);
             tempLoan = tempLoan->nextloan;
         }
         temp = temp->nextcust;
@@ -284,17 +290,21 @@ void createInstallments(customer** customers){
     }
 }
 
-void printInstallments(customer* customers){
+void printInstallments(customer* customers, FILE* output_txt){
     customer* temp = customers;
     while(temp != NULL){
         printf("--------------------------------------------------\n");
         printf("%d - %s %s - type : %s total debt : %.0f\n", temp->customerid, temp->name, temp->surname, temp->customertype, temp->totaldebt);
+        fprintf(output_txt, "--------------------------------------------------\n");
+        fprintf(output_txt, "%d - %s %s - type : %s total debt : %.0f\n", temp->customerid, temp->name, temp->surname, temp->customertype, temp->totaldebt);
         loan* tempLoan = temp->loanptr;
         if(tempLoan == NULL){
             printf("        no loan\n");
+            fprintf(output_txt, "        no loan\n");
         }
         while(tempLoan != NULL){
             printf("    %s : %s - %f - %s - %d\n",tempLoan->loanid , tempLoan->type, tempLoan->totalamount, tempLoan->processdate, tempLoan->totalinstallmentnum);
+            fprintf(output_txt, "    %s : %s - %f - %s - %d\n",tempLoan->loanid , tempLoan->type, tempLoan->totalamount, tempLoan->processdate, tempLoan->totalinstallmentnum);
             installment* tempInstallment = tempLoan->insptr;
             while(tempInstallment != NULL){
                 char paymentStatusMessage[16];
@@ -308,6 +318,7 @@ void printInstallments(customer* customers){
                     strcpy(paymentStatusMessage, "Delayed Payment");
                 }
                 printf("        %s -> %s - %f   - %s\n", tempInstallment->insid, tempInstallment->installmentdate, tempInstallment->amount, paymentStatusMessage);
+                fprintf(output_txt, "        %s -> %s - %f   - %s\n", tempInstallment->insid, tempInstallment->installmentdate, tempInstallment->amount, paymentStatusMessage);
                 tempInstallment = tempInstallment->nextins;
             }
             tempLoan = tempLoan->nextloan;
@@ -328,16 +339,16 @@ void markInstallmentAsPaid(customer** customers, int customerIdInt, char install
             if (strcmp(tempLoan->loanid, allId) == 0) {
                 tempIns = tempLoan->insptr;
             }
-                while (tempIns != NULL) {
-                    if(strcmp(installmentId, "ALL") == 0){
-                        tempIns->ispaid = 1;
-                    }
-                    if (strcmp(tempIns->insid, insid) == 0) {
-                        tempIns->ispaid = 1;
-                        return;
-                    }
-                    tempIns = tempIns->nextins;
+            while (tempIns != NULL) {
+                if(strcmp(installmentId, "ALL") == 0){
+                    tempIns->ispaid = 1;
                 }
+                if (strcmp(tempIns->insid, insid) == 0) {
+                    tempIns->ispaid = 1;
+                    return;
+                }
+                tempIns = tempIns->nextins;
+            }
             tempLoan = tempLoan->nextloan;
         }
         tempCust = tempCust->nextcust;
@@ -375,13 +386,14 @@ void readPayments(customer** customers, const char* filename) {
 
 
 
-void findUnpaidInstallments(customer** customers){
+void findUnpaidInstallments(customer** customers, FILE* output_txt){
     char inputDate[11];
     double totalDebt = 0;
     int delayedInstallments = 0;
     int day1, day2, month1, month2, year1, year2;
 
     printf("please enter date:\n");
+    fprintf(output_txt, "please enter date:\n");
     scanf("%s", inputDate);
 
     sscanf(inputDate, "%d/%d/%d", &day1, &month1, &year1);
@@ -412,6 +424,7 @@ void findUnpaidInstallments(customer** customers){
         }
         if(delayedInstallments != 0){
             printf("%s %s : Debt %.2f Number of Delayed Installments %d\n", tempCust->name, tempCust->surname, totalDebt, delayedInstallments);
+            fprintf(output_txt, "%s %s : Debt %.2f Number of Delayed Installments %d\n", tempCust->name, tempCust->surname, totalDebt, delayedInstallments);
         }
         tempCust->totaldebt = totalDebt;
         tempCust = tempCust->nextcust;
@@ -473,6 +486,12 @@ void deletePaidInstallments(customer** customers) {
 
 int main(){
     customer *customers = NULL;
+    FILE* output_txt;
+    output_txt = fopen("output.txt", "w");
+    if (output_txt == NULL) {
+        printf("Failed to open output file.\n");
+        return 1;
+    }
     int option = 1000;
     while (option != 0){
         printf("\n\n#############################################################\n");
@@ -496,7 +515,7 @@ int main(){
                 break;
             case 2:
                 //printCustomers function call here
-                printCustomers(customers);
+                printCustomers(customers, output_txt);
                 break;
             case 3:
                 //readLoans function call here
@@ -504,7 +523,7 @@ int main(){
                 break;
             case 4:
                 //printLoans function call here
-                printLoans(customers);
+                printLoans(customers, output_txt);
                 break;
             case 5:
                 //createInstallments function call here
@@ -512,7 +531,7 @@ int main(){
                 break;
             case 6:
                 //printInstallments function call here
-                printInstallments(customers);
+                printInstallments(customers, output_txt);
                 break;
             case 7:
                 //readPayments function call here
@@ -520,7 +539,7 @@ int main(){
                 break;
             case 8:
                 //findUnpaidInstallments function call here
-                findUnpaidInstallments(&customers);
+                findUnpaidInstallments(&customers, output_txt);
                 break;
             case 9:
                 //DeletePaidInstallments function call here
@@ -533,5 +552,6 @@ int main(){
                 printf("invalid option\n");
         }
     }
+    fclose(output_txt);
     return 0;
 }
